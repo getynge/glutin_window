@@ -23,6 +23,7 @@ use window::{
     ProcAddress,
     WindowSettings,
     Size,
+    Position
 };
 use glutin::{ Api, GlRequest };
 
@@ -75,13 +76,13 @@ fn builder_from_settings(settings: &WindowSettings) -> glutin::WindowBuilder {
 impl GlutinWindow {
 
     /// Creates a new game window for Glutin.
-    pub fn new(settings: WindowSettings) -> Result<Self, String> {
+    pub fn new(settings: &WindowSettings) -> Result<Self, String> {
         use std::error::Error;
         use glutin::ContextError;
 
         let title = settings.get_title();
         let exit_on_esc = settings.get_exit_on_esc();
-        let window = builder_from_settings(&settings).build();
+        let window = builder_from_settings(&settings).build(); 
         let window = match window {
                 Ok(window) => window,
                 Err(_) => {
@@ -277,7 +278,7 @@ impl Window for GlutinWindow {
 }
 
 impl BuildFromWindowSettings for GlutinWindow {
-    fn build_from_window_settings(settings: WindowSettings)
+    fn build_from_window_settings(settings: &WindowSettings)
     -> Result<Self, String> {
         GlutinWindow::new(settings)
     }
@@ -307,6 +308,26 @@ impl AdvancedWindow for GlutinWindow {
         if value {
             self.fake_capture();
         }
+    }
+
+    fn show(&mut self){
+        self.window.show();
+    }
+
+    fn hide(&mut self){
+        self.window.hide()
+    }
+
+    fn get_position(&self) -> Option<Position>{
+        match self.window.get_position(){
+            Some(x) => Some(Position::from(x)),
+            _ => None,
+        }
+    }
+
+    fn set_position<P: Into<Position>>(&mut self, val: P){
+        let pos:Position = val.into();
+        self.window.set_position(pos.x, pos.y);
     }
 }
 
