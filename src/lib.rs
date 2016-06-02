@@ -36,6 +36,7 @@ pub struct GlutinWindow {
     // The back-end does not remember the title.
     title: String,
     exit_on_esc: bool,
+    fullscreen_on_f1: bool,
     should_close: bool,
     // Used to detect enter/leave cursor events.
     has_cursor: bool,
@@ -48,6 +49,9 @@ pub struct GlutinWindow {
     mouse_relative: Option<(f64, f64)>,
     // Used to emit cursor event after enter/leave.
     cursor_pos: Option<[f64; 2]>,
+
+    // Used to rebuild the window when transitioning to fullscreen.
+    built_from: WindowSettings,
 }
 
 fn builder_from_settings(settings: &WindowSettings) -> glutin::WindowBuilder {
@@ -83,6 +87,7 @@ impl GlutinWindow {
 
         let title = settings.get_title();
         let exit_on_esc = settings.get_exit_on_esc();
+        let fullscreen_on_f1 = settings.get_fullscreen_on_f1();
         let window = builder_from_settings(&settings).build();
         let window = match window {
                 Ok(window) => window,
@@ -111,12 +116,14 @@ impl GlutinWindow {
             window: window,
             title: title,
             exit_on_esc: exit_on_esc,
+            fullscreen_on_f1: fullscreen_on_f1,
             should_close: false,
             has_cursor: true,
             cursor_pos: None,
             is_capturing_cursor: false,
             last_cursor_pos: None,
             mouse_relative: None,
+            built_from: settings.clone(),
         })
     }
 
@@ -175,6 +182,12 @@ impl GlutinWindow {
                 let piston_key = map_key(key);
                 if let (true, Key::Escape) = (self.exit_on_esc, piston_key) {
                     self.should_close = true;
+                }
+                if let (true, Key::F1) = (self.fullscreen_on_f1, piston_key) {
+                   let new_settings = self.built_from
+                       .clone()
+                       .fullscreen(!self.built_from.get_fullscreen());
+                   //TODO: Use this to make fullscreen happen
                 }
                 Some(Input::Press(Button::Keyboard(piston_key)))
             },
@@ -310,8 +323,18 @@ impl AdvancedWindow for GlutinWindow {
             self.fake_capture();
         }
     }
+    
     fn show(&mut self) { self.window.show(); }
     fn hide(&mut self) { self.window.hide(); }
+    
+    fn get_fullscreen_on_f1(&self) -> bool {
+       self.fullscreen_on_f1
+    }
+
+    fn set_fullscreen_on_f1(&mut self, value: bool) {
+        self.fullscreen_on_f1 = value;
+    }
+    
     fn get_position(&self) -> Option<Position> {
         self.window.get_position().map(|(x, y)|
             Position { x: x, y: y })
