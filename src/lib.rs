@@ -187,10 +187,13 @@ impl GlutinWindow {
                 if let (true, Key::F1) = (self.fullscreen_on_f1, piston_key) {
                    //TODO: make fullscreen happen here
                     let will_be_fullscreen = !self.built_from.get_fullscreen();
+                    
 
                     self.built_from.set_fullscreen(will_be_fullscreen);
                     self.window = builder_from_settings(&self.built_from).build().unwrap();
-                   
+                    unsafe{
+                        self.window.make_current().expect("ERROR: Could not switch contexts");
+                    }
                 }
                 Some(Input::Press(Button::Keyboard(piston_key)))
             },
