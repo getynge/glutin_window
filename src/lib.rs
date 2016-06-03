@@ -182,12 +182,15 @@ impl GlutinWindow {
                 let piston_key = map_key(key);
                 if let (true, Key::Escape) = (self.exit_on_esc, piston_key) {
                     self.should_close = true;
+                    println!("Escape was pressed!");
                 }
                 if let (true, Key::F1) = (self.fullscreen_on_f1, piston_key) {
-                   let new_settings = self.built_from
-                       .clone()
-                       .fullscreen(!self.built_from.get_fullscreen());
-                   //TODO: Use this to make fullscreen happen
+                   //TODO: make fullscreen happen here
+                    let will_be_fullscreen = !self.built_from.get_fullscreen();
+
+                    self.built_from.set_fullscreen(will_be_fullscreen);
+                    self.window = builder_from_settings(&self.built_from).build().unwrap();
+                   
                 }
                 Some(Input::Press(Button::Keyboard(piston_key)))
             },
